@@ -7,28 +7,27 @@ class App {
         this.ctx = this.canvas.getContext('2d');
         document.body.appendChild(this.canvas);
 
-        window.addEventListener('resize', this.resize.bind(this), false);
-        this.resize('resize');
-
         this.socket = io("http://localhost:8000");
-        this.playerGroup = new PlayerGroup(this.stageWidth, this.stageHeight, this.socket);
+        this.playerGroup = new PlayerGroup(this.socket);
         this.socket.on('initInfo', function (data) {
+            console.log("adsf")
             data = JSON.parse(data)
-            this.myPlayer = new Player(this.stageWidth, this.stageHeight, 
-                                       data.xRatio, data.yRatio, data.id, data.color, 
-                                       true, document);
+            this.myPlayer = new Player(data.id, data.color, true, document);
             this.playerGroup.addPlayer(this.myPlayer);
-            // console.log(this.playerGroup);
+            window.addEventListener('resize', this.resize.bind(this), false);
+            this.resize('resize');
         }.bind(this));
 
         requestAnimationFrame(this.update.bind(this));
     }
 
     resize() {
-        this.stageWidth = 500;
-        this.stageHeight = 500;
+        this.stageWidth = this.canvas.clientWidth;
+        this.stageHeight = this.canvas.clientHeight;
 
         const dpr = window.devicePixelRatio;
+
+        this.playerGroup.resize(this.stageWidth, this.stageHeight);
         
         this.canvas.width = this.stageWidth * dpr;
         this.canvas.height = this.stageHeight * dpr;

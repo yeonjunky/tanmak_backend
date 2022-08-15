@@ -1,18 +1,10 @@
 export class Player {
-    constructor(stageWidth, stageHeight, xRatio, yRatio, id, color, isMy = false, document) {
-        this.stageWidth = stageWidth;
-        this.stageHeight = stageHeight;
-
+    constructor(id, color, isMy = false, document) {
         this.id = id;
         this.name = "hello";
-        this.x = this.stageWidth * xRatio;
-        this.y = this.stageHeight * yRatio;
-        this.radius = 10;
         this.color = color;
-        this.playerSpeed = 3;
         this.dead = false;
         this.isMy = isMy;
-
         if (isMy) {
             this.rightPressed = false;
             this.leftPressed = false;
@@ -21,6 +13,26 @@ export class Player {
             document.addEventListener('keydown', this.keyDownHandler.bind(this), false);
             document.addEventListener('keyup', this.keyUpHandler.bind(this), false);
         }
+    }
+
+    init(xRatio, yRatio) {
+        const speedConstant = 3 / 800;
+        const radiusConstant = 10 / (800 * 800);
+        this.playerXSpeed = this.stageWidth * speedConstant;
+        this.playerYSpeed = this.stageHeight * speedConstant;
+        this.radius = this.stageWidth * this.stageHeight * radiusConstant;
+        this.setX(xRatio);
+        this.setY(yRatio);
+    }
+
+    resize(stageWidth, stageHeight) {
+        const previousXRatio = this.getXRatio();
+        const previousYRatio = this.getYRatio();
+
+        this.stageWidth = stageWidth;
+        this.stageHeight = stageHeight;
+
+        this.init(previousXRatio, previousYRatio);
     }
 
     keyDownHandler(event) {
@@ -46,6 +58,7 @@ export class Player {
     }
 
     getXRatio() {
+        if (this.x === undefined) return 0.5;
         return this.x / this.stageWidth;
     }
 
@@ -54,19 +67,20 @@ export class Player {
     }
 
     getYRatio() {
+        if (this.y === undefined) return 0.5;
         return this.y / this.stageHeight;
     }
 
     setY(yRatio) {
-        this.x = this.stageHeight * yRatio;
+        this.y = this.stageHeight * yRatio;
     }
 
     update() {
         if (this.isMy) {
-            if (this.rightPressed && this.x < this.stageWidth - this.radius) this.x += this.playerSpeed;
-            if (this.leftPressed && this.x > this.radius) this.x -= this.playerSpeed;
-            if (this.upPressed && this.y > this.radius) this.y -= this.playerSpeed;
-            if (this.downPressed && this.y < this.stageHeight - this.radius) this.y += this.playerSpeed;
+            if (this.rightPressed && this.x < this.stageWidth - this.radius) this.x += this.playerXSpeed;
+            if (this.leftPressed && this.x > this.radius) this.x -= this.playerXSpeed;
+            if (this.upPressed && this.y > this.radius) this.y -= this.playerYSpeed;
+            if (this.downPressed && this.y < this.stageHeight - this.radius) this.y += this.playerYSpeed;
         }
     }
 
