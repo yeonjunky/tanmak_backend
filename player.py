@@ -7,5 +7,9 @@ class Player:
         self.xRatio = xRatio
         self.yRatio = yRatio
 
+    def setPosRatio(self, xRatio, yRatio):
+        self.xRatio = xRatio
+        self.yRatio = yRatio
+
     def toJson(self):
         return json.dumps(self, default=lambda o: o.__dict__, indent=4)
