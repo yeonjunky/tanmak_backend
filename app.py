@@ -45,8 +45,7 @@ def disconnect():
 def sendUserInfo(data):
     player = players[data['id']]
 
-    player.xRatio = data['xRatio']
-    player.yRatio = data['yRatio']
+    player.setPosRatio(data['xRatio'], data['yRatio'])
 
     emit('update', player.toJson(), broadcast=True, include_self=False)
 
