@@ -2,53 +2,42 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 from engineio.payload import Payload
 
-import logging
 import random
 
 from player import Player
 
 
-# logging.getLogger('socketio').setLevel(logging.ERROR)
-# logging.getLogger('engineio').setLevel(logging.ERROR)
-# logging.getLogger('geventwebsocket.handler').setLevel(logging.ERROR)
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-Payload.max_decode_packets = 50
+Payload.max_decode_packets = 100
 socketio = SocketIO(app, cors_allowed_origins='*')
+
+INITIAL_POSITION_RATIO = 0.5
 
 players = {}
 
-@socketio.on('connect')
+@socketio.event
 def connect():
     id = request.sid
-    color = []
+    color = '#' + str(hex(random.randint(0, 16777215)))[2:]
 
-    for _ in range(3):
-        color.append(random.randint(0, 255))
-
-    data = {
-        'xRatio': random.random(),
-        'yRatio': random.random(),
-        'id': id,
-        'color': 'rgb(' + str(color)[1:-1] + ')'
-    }
-
-    user = Player(**data)
+    user = Player(id, color, INITIAL_POSITION_RATIO, INITIAL_POSITION_RATIO)
 
     for p in players:
         emit('userJoin', players[p].toJson())
 
-    players[id] = user
-    emit('userJoin', user.toJson(), broadcast=True)
-
     emit('initInfo', user.toJson())
+    players[id] = user
+    print(players, 'sadf')
+
+    emit('userJoin', user.toJson(), broadcast=True, include_self=False)
 
 
 @socketio.on('disconnect')
 def disconnect():
     id = request.sid
     del players[id]
+    print("disconnected user: " + id)
     emit('leaveUser', id, broadcast=True)
 
 
@@ -58,7 +47,8 @@ def sendUserInfo(data):
 
     player.xRatio = data['xRatio']
     player.yRatio = data['yRatio']
-    emit('update', player.toJson(), broadcast=True)    
+
+    emit('update', player.toJson(), broadcast=True, include_self=False)
 
 
 @app.route('/')
