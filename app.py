@@ -1,6 +1,5 @@
 from flask import Flask, request
 from flask_socketio import SocketIO, emit
-from engineio.payload import Payload
 
 import random
 
@@ -40,13 +39,11 @@ def disconnect():
 
 @socketio.on('sendUserInfo')
 def sendUserInfo(data):
-    # try:
     player = players[data['id']]
 
     player.setPosRatio(data['xRatio'], data['yRatio'])
 
     emit('update', player.toJson(), broadcast=True, include_self=False)
-
 
 
 print("server is running on http://localhost:8080")
