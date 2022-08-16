@@ -13,6 +13,7 @@ INITIAL_POSITION_RATIO = 0.5
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
 players = {}
+is_alive = {}
 initial_time = 0
 player_exist = False
 meatballWorker = None
@@ -32,6 +33,7 @@ def connect():
         emit('userJoin', players[p].toJson())
 
     players[id] = user
+    is_alive[id] = True
 
     emit('initInfo', user.toJson())
     emit('userJoin', user.toJson(), broadcast=True, include_self=False)
@@ -67,7 +69,8 @@ def sendUserInfo(data):
 
 @socketio.on('dead')
 def player_dead(id):
-    del players[id]
+    is_alive[id] = False
+
     emit('dead', id, broadcast=True)
 
 
