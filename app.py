@@ -67,6 +67,7 @@ def sendUserInfo(data):
 
 @socketio.on('dead')
 def player_dead(id):
+    del players[id]
     emit('dead', id, broadcast=True)
 
 
