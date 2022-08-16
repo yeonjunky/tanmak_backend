@@ -65,5 +65,10 @@ def sendUserInfo(data):
     emit('update', player.toJson(), broadcast=True, include_self=False)
 
 
+@socketio.on('dead')
+def player_dead(id):
+    emit('dead', id, broadcast=True)
+
+
 print("server is running on http://localhost:8080")
 socketio.run(app, port=8080, host='0.0.0.0')
