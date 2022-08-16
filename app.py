@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, request
 from flask_socketio import SocketIO, emit
 from engineio.payload import Payload
 
@@ -6,15 +6,13 @@ import random
 
 from player import Player
 
-
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-Payload.max_decode_packets = 100
-socketio = SocketIO(app, cors_allowed_origins='*')
-
 INITIAL_POSITION_RATIO = 0.5
 
+
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins='*')
 players = {}
+
 
 @socketio.event
 def connect():
@@ -28,7 +26,6 @@ def connect():
 
     emit('initInfo', user.toJson())
     players[id] = user
-    print(players, 'sadf')
 
     emit('userJoin', user.toJson(), broadcast=True, include_self=False)
 
@@ -43,6 +40,7 @@ def disconnect():
 
 @socketio.on('sendUserInfo')
 def sendUserInfo(data):
+    # try:
     player = players[data['id']]
 
     player.setPosRatio(data['xRatio'], data['yRatio'])
@@ -50,10 +48,6 @@ def sendUserInfo(data):
     emit('update', player.toJson(), broadcast=True, include_self=False)
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
 
-
-print("server is running on http://localhost:8000")
-socketio.run(app, port=8000)
+print("server is running on http://localhost:8080")
+socketio.run(app, port=8080)
