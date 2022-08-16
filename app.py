@@ -28,9 +28,9 @@ def connect():
     color = '#' + str(hex(random.randint(0, 16777215)))[2:]
     user = Player(id, color, INITIAL_POSITION_RATIO, INITIAL_POSITION_RATIO)
 
-    print("sdaf", id)
     for p in players:
-        emit('userJoin', players[p].toJson())
+        if players[p].is_alive:
+            emit('userJoin', players[p].toJson())
 
     players[id] = user
     is_alive[id] = True
@@ -38,10 +38,14 @@ def connect():
     emit('initInfo', user.toJson())
     emit('userJoin', user.toJson(), broadcast=True, include_self=False)
 
-    if not player_exist:
+    if not player_exist or not meatballWorker.flag:
         player_exist = True
+
         meatballWorker = MeatballWorker(socketio, initial_time)
         socketio.start_background_task(meatballWorker.work)
+
+    if not meatballWorker.flag:
+        meatballWorker.restart()
 
 
 @socketio.on('disconnect')
@@ -69,9 +73,16 @@ def sendUserInfo(data):
 
 @socketio.on('dead')
 def player_dead(id):
-    is_alive[id] = False
+    global meatballWorker
 
     emit('dead', id, broadcast=True)
+    players[id].is_alive = False
+
+    for p in players:
+        if players[p].is_alive:
+            return 
+
+    meatballWorker.stop()
 
 
 print("server is running on http://localhost:8080")

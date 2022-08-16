@@ -4,6 +4,7 @@ class Player:
         self.color = color
         self.xRatio = xRatio
         self.yRatio = yRatio
+        self.is_alive = True
 
     def setPosRatio(self, xRatio, yRatio):
         self.xRatio = xRatio

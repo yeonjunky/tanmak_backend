@@ -8,10 +8,12 @@ class MeatballWorker:
 
     def __init__(self, socketio, initial_time) -> None:
         self.socketio = socketio
-        self.flag = True
+        self.flag = False
         self.initial_time = initial_time
 
     def work(self):
+        self.flag = True
+
         while self.flag:
             curr_time = time.time()
 
@@ -37,5 +39,10 @@ class MeatballWorker:
     def stop(self):
         self.flag = False
 
+    def restart(self):
+        self.flag = True
+
     def set_initial_time(self, initial_time):
         self.initial_time = initial_time
+
+    # def 
