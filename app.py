@@ -13,7 +13,7 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 players = {}
 
 
-@socketio.event
+@socketio.on('connect')
 def connect():
     id = request.sid
     color = '#' + str(hex(random.randint(0, 16777215)))[2:]
