@@ -1,5 +1,3 @@
-import json
-
 class Player:
     def __init__(self, id, color, xRatio, yRatio) -> None:
         self.id = id
@@ -12,4 +10,9 @@ class Player:
         self.yRatio = yRatio
 
     def toJson(self):
-        return json.dumps(self, default=lambda o: o.__dict__, indent=4)
+        return {
+            'id': self.id, 
+            'color': self.color, 
+            'xRatio': self.xRatio, 
+            'yRatio': self.yRatio
+        }
