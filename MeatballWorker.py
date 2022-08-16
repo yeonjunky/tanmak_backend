@@ -15,8 +15,6 @@ class MeatballWorker:
         while self.flag:
             curr_time = time.time()
 
-            num_meatball = int(10 + (curr_time - self.initial_time) // 10 * 3)
-
             if random.randint(0, 1): # 0 -> xRatio = 0, 1 -> yRatio = 0
                 xRatio = 0
                 yRatio = random.random()
@@ -33,7 +31,6 @@ class MeatballWorker:
 
             if delay_idx >= len(self.next_ball_delay):
                 delay_idx = len(self.next_ball_delay) - 1
-
 
             self.socketio.sleep(self.next_ball_delay[delay_idx])
 
