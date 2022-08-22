@@ -2,9 +2,10 @@ import time
 import random
 
 from tanmak import MeatBall
+from constants import NEXT_BALL_DELAY
 
 class MeatballWorker:
-    next_ball_delay = [0.8, 0.6, 0.4, 0.2, 0.1, 0.05]
+    next_ball_delay = NEXT_BALL_DELAY
 
     def __init__(self, socketio, initial_time) -> None:
         self.socketio = socketio
@@ -39,10 +40,14 @@ class MeatballWorker:
     def stop(self):
         self.flag = False
 
-    def restart(self):
+    def restart(self, initial_time):
         self.flag = True
+        self.set_initial_time(initial_time)
 
     def set_initial_time(self, initial_time):
         self.initial_time = initial_time
+
+    def is_stopped(self):
+        return not self.flag
 
     # def 

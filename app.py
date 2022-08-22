@@ -45,7 +45,7 @@ def connect():
         socketio.start_background_task(meatballWorker.work)
 
     if not meatballWorker.flag:
-        meatballWorker.restart()
+        meatballWorker.restart(initial_time)
 
 
 @socketio.on('disconnect')
@@ -75,7 +75,7 @@ def sendUserInfo(data):
 def player_dead(id):
     global meatballWorker
 
-    emit('dead', id, broadcast=True)
+    emit('dead', id, broadcast=True, include_self=False)
     players[id].is_alive = False
 
     for p in players:
