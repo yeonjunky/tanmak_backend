@@ -21,22 +21,22 @@ room_name = "asdf"
 
 @socketio.on('connect')
 def connect():
-    print(socketio.server.manager.rooms['/'].keys())
-    emit('connected', {'rooms': str(rooms_dict)})
+    emit('message', {'message': 'successfully connected!'})
+    emit('connected')
 
 
 @socketio.on('disconnect')
 def disconnect():
-    global meatballWorker, player_exist
+    global meatballWorker, player_exist, rooms_dict
 
     id = request.sid
-    room = rooms(id)[1]
-    del rooms_dict[room][id]
 
-    print(rooms(id))
     for r in rooms(id):
         leave_room(r)
-    print("disconnected user: " + id)
+        if r != id:
+            del rooms_dict[r][id]
+
+    print('disconnected user: ' + id)
 
     emit('leaveUser', id, broadcast=True)
 
@@ -44,30 +44,55 @@ def disconnect():
         player_exist = False
         meatballWorker.stop()
 
-@socketio.on('join')
-def joinRoom():
-    global meatballWorker, player_exist
+
+@socketio.on('createRoom')
+def create_room():
+    global meatballWorker, player_exist, rooms_dict
 
     id = request.sid
     room = id + "'s room"
     initial_time = time.time()
     color = '#' + str(hex(random.randint(0, 16777215)))[2:]
-    user = Player(id, color, INITIAL_POSITION_RATIO, INITIAL_POSITION_RATIO)
+    user = Player(id, color, INITIAL_POSITION_RATIO, INITIAL_POSITION_RATIO, room)
+
+    send({'message': id + ' has entered the room.'}, to=room, broadcast=True)
+
+    join_room(room)
+    rooms_dict[room] = {id: user}
+
+    emit('initInfo', user.toJson())
+    emit('userJoin', user.toJson(), include_self=False, to=room, broadcast=True)
+
+    if not player_exist or not meatballWorker:
+        player_exist = True
+
+        meatballWorker = MeatballWorker(socketio, initial_time)
+        socketio.start_background_task(meatballWorker.work)
+
+    if not meatballWorker.is_stopped():
+        meatballWorker.restart(initial_time)
+
+
+@socketio.on('join')
+def participate_room(data):
+    global meatballWorker, player_exist, rooms_dict
+
+    id = request.sid
+    room = data['room']
+    color = '#' + str(hex(random.randint(0, 16777215)))[2:]
+    user = Player(id, color, INITIAL_POSITION_RATIO, INITIAL_POSITION_RATIO, room)
 
     join_room(room)
     send({'message': id + ' has entered the room.'}, to=room, broadcast=True)
-
-    if not room in rooms_dict:
-        rooms_dict[room] = {}
-
+    print(rooms_dict)
     for p in rooms_dict[room]:
-        if rooms_dict[p].is_alive:
-            emit('userJoin', rooms_dict[p].toJson())
+        if rooms_dict[room][p].is_alive:
+            emit('userJoin', rooms_dict[room][p].toJson())
 
     rooms_dict[room][id] = user
 
     emit('initInfo', user.toJson())
-    emit('userJoin', user.toJson(), include_self=False, to=room_name, broadcast=True)
+    emit('userJoin', user.toJson(), include_self=False, to=room, broadcast=True)
 
     if not player_exist or not meatballWorker:
         player_exist = True
@@ -90,10 +115,12 @@ def leave():
 
 
 @socketio.on('sendUserInfo')
-def sendUserInfo(data):
-    id = data['id']
+def send_user_info(data):
+    global rooms_dict
 
-    player = rooms_dict[rooms(id)[1]][id]
+    id = data['id']
+    room = data['room']
+    player = rooms_dict[room][id]
 
     player.setPosRatio(data['xRatio'], data['yRatio'])
 
@@ -101,10 +128,12 @@ def sendUserInfo(data):
 
 
 @socketio.on('dead')
-def player_dead(id):
-    global meatballWorker
+def player_dead(data):
+    global meatballWorker, rooms_dict
 
-    room = rooms(id)[1]
+    id = data['id']
+    room = data['room']
+
     rooms_dict[room][id].is_alive = False
 
     emit('dead', id, broadcast=True, include_self=False)
@@ -117,6 +146,8 @@ def player_dead(id):
 
 @app.route('/rooms', methods=['GET', 'POST'])
 def all_rooms():
+    global rooms_dict
+
     if not rooms_dict:
         response = {'rooms': None}
     else:
